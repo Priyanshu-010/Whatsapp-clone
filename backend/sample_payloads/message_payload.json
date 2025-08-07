@@ -1,0 +1,9 @@
+{
+  "wa_id": "1234567890",
+  "msg_id": "msg_001",
+  "from": "user",
+  "to": "business",
+  "text": "Hello, how are you?",
+  "timestamp": 1697059200,
+  "user_name": "John Doe"
+}
