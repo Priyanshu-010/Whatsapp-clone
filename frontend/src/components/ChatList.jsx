@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 
-function ChatList() {
-  const conversations = useSelector((state) => state.chat.conversations);
+function ChatList({ onSelect }) { // Accept onSelect prop
+  const conversations = useSelector((state) => state.chat.conversations || []);
 
   return (
     <div className="h-full">
@@ -10,9 +10,14 @@ function ChatList() {
       </div>
       <div className="overflow-y-auto h-[calc(100%-60px)]">
         {conversations.map((conv) => {
-          const latestMessage = conv.messages[conv.messages.length - 1];
+          const messages = conv.messages || [];
+          const latestMessage = messages.length > 0 ? messages[messages.length - 1] : null;
           return (
-            <div key={conv._id} className="flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+            <div
+              key={conv._id}
+              className="flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+              onClick={() => onSelect(conv._id)} // Call onSelect with wa_id
+            >
               <div className="w-12 h-12 bg-gray-300 rounded-full mr-3"></div>
               <div className="flex-1">
                 <div className="font-medium">{latestMessage?.user_name || 'Unknown'}</div>

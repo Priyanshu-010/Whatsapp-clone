@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 function MessageInput({ socket, wa_id }) {
   const [message, setMessage] = useState('');
+  const [user_name] = useState('User'); // Default username
 
   const sendMessage = () => {
     if (message && wa_id) {
@@ -10,9 +11,14 @@ function MessageInput({ socket, wa_id }) {
         wa_id,
         from: 'user',
         timestamp: Date.now(),
+        user_name,
       };
-      socket.emit('send_message', msg);
+      console.log('Attempting to send message:', msg);
+      socket.emit('sendMessage', msg);
+      console.log('Message emitted:', msg);
       setMessage('');
+    } else {
+      console.log('Send failed: message or wa_id is empty', { message, wa_id });
     }
   };
 

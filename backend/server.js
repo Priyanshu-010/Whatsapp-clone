@@ -5,9 +5,10 @@ import messageRoutes from './routes/messages.js';
 import { Server } from 'socket.io';
 import http from 'http';
 import dotenv from 'dotenv';
+import { setupSocket } from './socket.js';
 
 dotenv.config();
-const PORT = process.env.PORT || 3000; // Use 3000 as the default port, matching your setup
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 const server = http.createServer(app);
@@ -29,6 +30,8 @@ app.use('/api', messageRoutes);
 
 connectDB();
 
+setupSocket(io); // Pass io instance to setupSocket
+
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
   socket.on('disconnect', () => {
@@ -37,7 +40,7 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`); // Log the actual port (3000)
+  console.log(`Server running on port ${PORT}`);
 });
 
 export { io };

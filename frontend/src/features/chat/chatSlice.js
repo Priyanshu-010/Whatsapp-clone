@@ -3,7 +3,12 @@ import axios from 'axios';
 
 const fetchConversations = createAsyncThunk('chat/fetchConversations', async () => {
   const response = await axios.get('http://localhost:3000/api/conversations');
-  return response.data;
+  console.log('API Response:', response.data);
+  return response.data.map(conv => ({
+    _id: conv._id,
+    user_name: conv.user_name,
+    messages: conv.messages || [],
+  }));
 });
 
 const chatSlice = createSlice({
@@ -14,11 +19,30 @@ const chatSlice = createSlice({
   },
   reducers: {
     addMessage: (state, action) => {
-      const conversation = state.conversations.find((c) => c._id === action.payload.wa_id);
+      const msg = action.payload;
+      const conversation = state.conversations.find((c) => c._id === msg.wa_id);
       if (conversation) {
-        conversation.messages.push(action.payload);
+        conversation.messages.push({
+          wa_id: msg.wa_id,
+          msg_id: msg.msg_id,
+          from: msg.from,
+          text: msg.text,
+          timestamp: msg.timestamp,
+          user_name: msg.user_name,
+        });
       } else {
-        state.conversations.push({ _id: action.payload.wa_id, messages: [action.payload] });
+        state.conversations.push({
+          _id: msg.wa_id,
+          user_name: msg.user_name,
+          messages: [{
+            wa_id: msg.wa_id,
+            msg_id: msg.msg_id,
+            from: msg.from,
+            text: msg.text,
+            timestamp: msg.timestamp,
+            user_name: msg.user_name,
+          }],
+        });
       }
     },
   },

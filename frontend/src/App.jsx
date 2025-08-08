@@ -1,23 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchConversations } from './features/chat/chatSlice';
 import ChatList from './components/ChatList';
 import ChatWindow from './components/ChatWindow';
 import { io } from 'socket.io-client';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const dispatch = useDispatch();
-  const { status } = useSelector((state) => state.chat);
+  const { status, conversations } = useSelector((state) => state.chat);
   const socket = io('http://localhost:3000');
+  const [selectedWaId, setSelectedWaId] = useState(conversations[0]?._id || null);
 
   useEffect(() => {
     dispatch(fetchConversations());
-    socket.on('receive_message', (msg) => {
+    console.log('Setting up newMessage listener');
+    socket.on('newMessage', (msg) => {
+      console.log('Received newMessage:', msg);
       dispatch({ type: 'chat/addMessage', payload: msg });
     });
 
     return () => socket.disconnect();
   }, [dispatch]);
+
+  useEffect(() => {
+    if (selectedWaId) {
+      socket.emit('joinChat', selectedWaId);
+      console.log('Joined chat room:', selectedWaId);
+    } else {
+      console.log('No wa_id selected, skipping joinChat');
+    }
+  }, [selectedWaId, socket]);
 
   if (status === 'loading') return <div className="text-center p-4">Loading...</div>;
   if (status === 'failed') return <div className="text-center p-4">Error loading conversations</div>;
@@ -39,10 +52,12 @@ function App() {
       </div>
       <div className="flex flex-1">
         <div className="w-1/4 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-          <ChatList />
+          <ErrorBoundary>
+            <ChatList onSelect={setSelectedWaId} />
+          </ErrorBoundary>
         </div>
         <div className="w-3/4 flex flex-col">
-          <ChatWindow socket={socket} />
+          <ChatWindow socket={socket} wa_id={selectedWaId} />
         </div>
       </div>
     </div>

@@ -51,11 +51,17 @@ router.get('/messages/:wa_id', async (req, res) => {
   }
 });
 
-// Get all conversations (grouped by wa_id)
+// Get all conversations with messages
 router.get('/conversations', async (req, res) => {
   try {
     const conversations = await Message.aggregate([
-      { $group: { _id: '$wa_id', user_name: { $first: '$user_name' } } },
+      {
+        $group: {
+          _id: '$wa_id',
+          user_name: { $first: '$user_name' },
+          messages: { $push: '$$ROOT' }, // Include all messages
+        },
+      },
     ]);
     res.json(conversations);
   } catch (error) {
