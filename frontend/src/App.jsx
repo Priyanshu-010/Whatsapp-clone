@@ -1,31 +1,52 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import './App.css'
-import { fetchConversations } from './redux/slices/chatSlice';
+import { fetchConversations } from './features/chat/chatSlice';
 import ChatList from './components/ChatList';
 import ChatWindow from './components/ChatWindow';
+import { io } from 'socket.io-client';
 
 function App() {
   const dispatch = useDispatch();
-  const selectedChat = useSelector((state) => state.chat.selectedChat);
+  const { status } = useSelector((state) => state.chat);
+  const socket = io('http://localhost:3000');
 
   useEffect(() => {
     dispatch(fetchConversations());
+    socket.on('receive_message', (msg) => {
+      dispatch({ type: 'chat/addMessage', payload: msg });
+    });
+
+    return () => socket.disconnect();
   }, [dispatch]);
 
+  if (status === 'loading') return <div className="text-center p-4">Loading...</div>;
+  if (status === 'failed') return <div className="text-center p-4">Error loading conversations</div>;
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <ChatList />
-      {selectedChat ? (
-        <ChatWindow />
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500">Select a chat to start messaging</p>
+    <div className="flex flex-col h-screen bg-whatsapp-light dark:bg-whatsapp-dark text-gray-800 dark:text-gray-200">
+      <div className="w-full p-2 bg-white dark:bg-gray-800 border-b flex justify-between items-center">
+        <div className="font-bold">WhatsApp Clone</div>
+        <div className="flex space-x-2">
+          <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">🔍</button>
+          <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">⋮</button>
+          <button
+            onClick={() => document.documentElement.classList.toggle('dark')}
+            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+          >
+            🌙
+          </button>
         </div>
-      )}
+      </div>
+      <div className="flex flex-1">
+        <div className="w-1/4 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+          <ChatList />
+        </div>
+        <div className="w-3/4 flex flex-col">
+          <ChatWindow socket={socket} />
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
